@@ -1,0 +1,405 @@
+/* Phase 5 — editorial/research sections. These scroll ABOVE the fixed 3D canvas
+   on an opaque backdrop (the cinematic is done by the time they appear). All
+   numbers trace to reference/research-numbers.md. */
+
+#editorial {
+  position: relative;
+  z-index: 1;
+  background: var(--void);
+  border-top: 1px solid var(--line);
+}
+
+/* An opaque cap so the 3D scene doesn't bleed through as editorial scrolls in. */
+:root {
+  --line: rgba(242, 239, 233, 0.12);
+  --line-strong: rgba(242, 239, 233, 0.24);
+}
+
+.section {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: clamp(6rem, 14vh, 11rem) var(--gutter);
+}
+
+.kicker {
+  margin-bottom: 1.25rem;
+}
+
+.section h2 {
+  font-size: clamp(2rem, 4.4vw, 3.4rem);
+  line-height: 1.08;
+  max-width: 20ch;
+  margin-bottom: 1.5rem;
+}
+
+.section .lede {
+  margin-top: 0;
+  margin-bottom: 4rem;
+}
+
+.disclaimer {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--basalt) 85%, transparent);
+  max-width: 60ch;
+}
+
+/* ---------- concept / first light ---------- */
+#concept .legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin: 2.5rem 0 3rem;
+}
+#concept .chip {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  color: var(--basalt);
+}
+#concept .chip b {
+  color: var(--bone);
+  font-weight: 500;
+}
+#concept .swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  box-shadow: 0 0 10px -2px currentColor;
+}
+/* The continuous-score gradient bar: safe → hazardous. */
+#concept .score-bar {
+  height: 14px;
+  border-radius: 7px;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(
+    90deg,
+    #7fbf7f 0%,
+    #e3b23c 45%,
+    #d9791e 72%,
+    #b32a1f 100%
+  );
+}
+#concept .score-scale {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--basalt);
+  margin-bottom: 3rem;
+}
+
+/* ---------- domain-gap rover cards ---------- */
+.rover-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+.rover-card {
+  background: var(--void);
+  padding: 2.25rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.rover-card .rname {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.35rem;
+}
+.rover-card .rmeta {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: var(--signal);
+  text-transform: uppercase;
+}
+.rover-card .accent {
+  height: 3px;
+  width: 42px;
+  border-radius: 2px;
+}
+.rover-card ul {
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.85;
+  color: var(--basalt);
+}
+.rover-card ul b {
+  color: var(--bone);
+  font-weight: 600;
+}
+
+/* ---------- architecture pipeline ---------- */
+.pipeline {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+.pipe-step {
+  background: var(--void);
+  padding: 2rem 1.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  position: relative;
+}
+.pipe-step .idx {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--rust);
+}
+.pipe-step h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.pipe-step p {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: var(--basalt);
+}
+.pipe-step p b {
+  color: var(--bone);
+  font-weight: 600;
+}
+
+/* ---------- uncertainty accumulator ---------- */
+#uncertainty {
+  background: var(--void-2);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.unc-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 4rem;
+  align-items: center;
+}
+.unc-canvas-wrap {
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+#uncertainty-canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 2px;
+  image-rendering: auto;
+}
+.unc-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.1rem;
+}
+#unc-play {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--bone);
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.2s, color 0.2s;
+}
+#unc-play:hover {
+  border-color: var(--signal);
+  color: var(--signal);
+}
+#unc-slider {
+  flex: 1;
+  accent-color: var(--signal);
+  cursor: pointer;
+}
+.unc-readout {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--signal);
+  white-space: nowrap;
+  letter-spacing: 0.06em;
+}
+.unc-stat-row {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1.75rem;
+  flex-wrap: wrap;
+}
+.unc-stat b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  color: var(--bone);
+}
+.unc-stat span {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: var(--basalt);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ---------- results ---------- */
+.stat-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  margin-bottom: 4.5rem;
+}
+.stat-cell {
+  background: var(--void);
+  padding: 2rem 1.4rem;
+  text-align: center;
+}
+.stat-cell b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+  color: var(--bone);
+}
+.stat-cell span {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  color: var(--basalt);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+.gtile {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: flex-end;
+  padding: 0.9rem;
+}
+.gtile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.85) 100%);
+}
+.gtile .ginfo {
+  position: relative;
+  z-index: 2;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--bone);
+  letter-spacing: 0.04em;
+}
+.gtile .ginfo b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  margin-bottom: 0.15rem;
+}
+.gtile .ginfo .metric {
+  color: var(--signal);
+}
+
+/* ---------- footer ---------- */
+#colophon {
+  position: relative;
+  z-index: 1; /* sit above the fixed #scene canvas (z-index 0) */
+  background: var(--void);
+  border-top: 1px solid var(--line);
+  padding: clamp(5rem, 12vh, 8rem) var(--gutter) 3.5rem;
+}
+#colophon .inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+#colophon .fmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2rem;
+}
+#colophon .fmeta {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--basalt);
+  line-height: 1.8;
+  max-width: 62ch;
+}
+#colophon .flinks {
+  display: flex;
+  gap: 1.6rem;
+  flex-wrap: wrap;
+}
+#colophon .flinks a {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--bone);
+  border-bottom: 1px solid var(--line-strong);
+  padding-bottom: 3px;
+  transition: border-color 0.2s, color 0.2s;
+}
+#colophon .flinks a:hover {
+  border-color: var(--signal);
+  color: var(--signal);
+}
+#colophon .fbottom {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  color: color-mix(in srgb, var(--basalt) 70%, transparent);
+  line-height: 1.7;
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 900px) {
+  .unc-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+}
+@media (max-width: 860px) {
+  .rover-grid,
+  .pipeline {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 760px) {
+  .stat-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .gallery-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 500px) {
+  .gallery-grid {
+    grid-template-columns: 1fr;
+  }
+}

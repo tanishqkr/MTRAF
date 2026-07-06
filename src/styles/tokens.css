@@ -1,0 +1,27 @@
+/* MTRAF design tokens — carried over from the first prototype (see CLAUDE.md).
+   Do not re-theme these values. */
+
+:root {
+  /* Palette */
+  --void: #05040A;
+  --void-2: #0B0910;
+  --rust: #C1440E;
+  --rust-dim: #7A2B0A;
+  --ochre: #E3B23C;
+  --basalt: #8A8378;
+  --signal: #4CE0D2;
+  --bone: #F2EFE9;
+
+  /* Type families */
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* Rhythm */
+  --measure: 62ch;
+  --gutter: clamp(1.25rem, 5vw, 4rem);
+  --section-pad: clamp(4rem, 12vh, 9rem);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}

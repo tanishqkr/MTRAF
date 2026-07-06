@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MTRA — Mars Terrain Risk Analyzer</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%23C1440E'/%3E%3C/svg%3E"
+    />
+    <meta
+      name="description"
+      content="MTRA (Mars Terrain Risk Analyzer) — deep-learning terrain risk and uncertainty analysis for Mars rover navigation."
+    />
+
+    <!-- Fonts: Space Grotesk (display), Inter (body), IBM Plex Mono (telemetry) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="/src/styles/base.css" />
+    <link rel="stylesheet" href="/src/styles/editorial.css" />
+  </head>
+  <body>
+    <!-- Fixed chrome -->
+    <div id="progress-rail"><div id="progress-fill"></div></div>
+    <header id="topbar">
+      <span class="mark">MTRA</span>
+      <span class="sol mono" id="sol-clock">SOL 0001 · 00:00:00</span>
+    </header>
+
+    <!-- Fixed WebGL canvas behind all scrolling DOM. -->
+    <canvas id="scene"></canvas>
+
+    <!-- Scrolling story. Each .beat is a full-viewport scroll stage. -->
+    <main id="story">
+      <section class="beat" data-beat="hero">
+        <p class="eyebrow">Mars Terrain Risk Analyzer</p>
+        <h1 class="display">Reading the ground before the wheels do.</h1>
+        <p class="lede">
+          A deep-learning system that scores every patch of Martian terrain for
+          traversal risk — and tells you how much to trust the score.
+        </p>
+      </section>
+
+      <section class="beat" data-beat="transit">
+        <p class="eyebrow">Cruise · 480 million km</p>
+        <h2 class="headline">Seven months of coasting toward a moving target.</h2>
+        <p class="lede">
+          Every Mars mission ends the same way: a few minutes of descent that no
+          one on Earth can control in real time. The rover is on its own.
+        </p>
+      </section>
+
+      <section class="beat" data-beat="approach">
+        <p class="eyebrow">Approach</p>
+        <h2 class="headline">Entry, descent, and landing.</h2>
+        <p class="lede">Jezero Crater. 18.44°N, 77.45°E. Touchdown target locked.</p>
+      </section>
+
+      <section class="beat" data-beat="descent">
+        <p class="eyebrow">Powered descent · skycrane</p>
+        <h2 class="headline">The last twenty seconds.</h2>
+        <p class="lede">
+          The descent stage hovers, throttles its retros, and lowers the rover
+          onto the exact patch of ground it was told to trust.
+        </p>
+      </section>
+
+      <section class="beat" data-beat="touchdown">
+        <p class="eyebrow">Touchdown · Jezero Crater</p>
+        <h2 class="headline">Wheels down.</h2>
+        <p class="lede">
+          A pulse of dust, and the tether is cut. The descent stage climbs away
+          to crash a safe distance off — the rover is home.
+        </p>
+      </section>
+
+      <section class="beat" data-beat="landed">
+        <p class="eyebrow">Sol 0</p>
+        <h2 class="headline">Now the hard part: knowing where it's safe to drive.</h2>
+        <p class="lede">
+          Every wheel-turn from here is a bet on the terrain. MTRA is the system
+          that scores that bet — and says how sure it is.
+        </p>
+      </section>
+    </main>
+
+    <div class="scroll-cue">Scroll</div>
+
+    <!-- ===================== EDITORIAL / RESEARCH =====================
+         Every number below traces to reference/research-numbers.md
+         (from the original prototype). No placeholder stats. -->
+    <div id="editorial">
+      <!-- Concept: continuous score, not a class label -->
+      <section class="section" id="concept" data-reveal>
+        <p class="eyebrow kicker">The first frame</p>
+        <h2>MTRA doesn't ask what the ground is. It asks how dangerous it is.</h2>
+        <p class="lede">
+          Not a class label — a continuous traversability score in [0, 1], one per
+          pixel. Safe soil sits near the top; a boulder you must not drive over sits
+          near the bottom.
+        </p>
+        <div class="score-bar" aria-hidden="true"></div>
+        <div class="score-scale">
+          <span>0.00 · impassable</span><span>1.00 · freely traversable</span>
+        </div>
+        <div class="legend">
+          <div class="chip">
+            <span class="swatch" style="background: #7fbf7f; color: #7fbf7f"></span>
+            Soil <b>0.90</b>
+          </div>
+          <div class="chip">
+            <span class="swatch" style="background: #e3b23c; color: #e3b23c"></span>
+            Bedrock <b>0.65</b>
+          </div>
+          <div class="chip">
+            <span class="swatch" style="background: #d9791e; color: #d9791e"></span>
+            Sand <b>0.35</b>
+          </div>
+          <div class="chip">
+            <span class="swatch" style="background: #b32a1f; color: #b32a1f"></span>
+            Big Rock <b>0.05</b>
+          </div>
+        </div>
+        <p class="disclaimer">
+          Scores are geologically-justified proxy labels, not ground-truth sensor
+          measurements — disclosed, not hidden.
+        </p>
+      </section>
+
+      <!-- Domain gap -->
+      <section class="section" id="domain-gap" data-reveal>
+        <p class="eyebrow kicker">The domain gap</p>
+        <h2>Three missions never designed to be seen by the same model.</h2>
+        <p class="lede">
+          Prior work trains on one rover at a time. Built on AI4MARS v0.6, MTRA
+          takes Perseverance alongside Curiosity, Spirit and Opportunity — and the
+          gap between their cameras is measured, not assumed.
+        </p>
+        <div class="rover-grid">
+          <div class="rover-card">
+            <div class="rname">Curiosity</div>
+            <div class="rmeta">MSL · Gale Crater · 2012–</div>
+            <div class="accent" style="background: var(--basalt)"></div>
+            <ul>
+              <li>Grayscale NavCam</li>
+              <li><b>18,127</b> images · <b>16,064</b> labels</li>
+              <li>Bedrock-dominant train (<b>50.5%</b>)</li>
+              <li>Sand-heavy test (<b>32.8%</b>) — shift baked into the benchmark</li>
+            </ul>
+          </div>
+          <div class="rover-card">
+            <div class="rname">Perseverance</div>
+            <div class="rmeta">M2020 · Jezero Crater · 2021–</div>
+            <div class="accent" style="background: var(--rust)"></div>
+            <ul>
+              <li>Colour NavCam</li>
+              <li><b>4,573</b> images · <b>3,827</b> NAV labels</li>
+              <li>Mean brightness <b>106.1</b> vs MSL's <b>60.6</b></li>
+              <li>Big rock in <b>61%</b> of frames</li>
+            </ul>
+          </div>
+          <div class="rover-card">
+            <div class="rname">Spirit &amp; Opportunity</div>
+            <div class="rmeta">MER · Gusev / Meridiani · 2004–2018</div>
+            <div class="accent" style="background: var(--ochre)"></div>
+            <ul>
+              <li>Grayscale EFF (oldest cameras)</li>
+              <li><b>63.6%</b> low-contrast frames</li>
+              <li>Unmasked labels — no 30 m range mask</li>
+              <li>Test set excluded as a benchmark</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Architecture -->
+      <section class="section" id="architecture" data-reveal>
+        <p class="eyebrow kicker">Architecture · 100.2M parameters</p>
+        <h2>One shared backbone. Three ways in. A confidence interval on every pixel.</h2>
+        <p class="lede">
+          Sensor-specific quirks are absorbed at the edges; terrain semantics are
+          learned once and shared across every mission.
+        </p>
+        <div class="pipeline">
+          <div class="pipe-step">
+            <div class="idx">STAGE 1</div>
+            <h3>Mission Adapter</h3>
+            <p>
+              <b>305</b> params/rover, <b>915</b> total. Depthwise-separable conv,
+              zero-init output — identity at epoch 0. Never frozen; co-adapts with
+              the backbone.
+            </p>
+          </div>
+          <div class="pipe-step">
+            <div class="idx">STAGE 2</div>
+            <h3>ConvNeXt V2-Base</h3>
+            <p>
+              <b>87.7M</b> params. FCMAE pretrained, then ImageNet-22K/1K
+              fine-tuned. Learns features shared across all four rovers.
+            </p>
+          </div>
+          <div class="pipe-step">
+            <div class="idx">STAGE 3</div>
+            <h3>UNet + MC Dropout</h3>
+            <p>
+              Three skip connections. GroupNorm + GRN against feature collapse.
+              Dropout <b>p=0.1</b> stays active at inference — <b>30</b> stochastic
+              passes per image.
+            </p>
+          </div>
+          <div class="pipe-step">
+            <div class="idx">STAGE 4</div>
+            <h3>Dual Output</h3>
+            <p>
+              Traversability via sigmoid. The real uncertainty signal is
+              <b>trav_std</b> — the std across the 30 MC passes, not the auxiliary
+              head.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Uncertainty (signature interactive) -->
+      <section id="uncertainty" data-reveal>
+        <div class="section">
+          <p class="eyebrow kicker">Monte Carlo Dropout</p>
+          <h2>The model doesn't just guess. It tells you how sure it is.</h2>
+          <div class="unc-grid">
+            <div>
+              <div class="unc-canvas-wrap">
+                <canvas id="uncertainty-canvas" width="672" height="384"></canvas>
+              </div>
+              <div class="unc-controls">
+                <button id="unc-play" aria-label="Play MC Dropout passes">▶</button>
+                <input
+                  id="unc-slider"
+                  type="range"
+                  min="1"
+                  max="30"
+                  value="1"
+                  step="1"
+                  aria-label="MC Dropout pass number"
+                />
+                <div class="unc-readout" id="unc-readout">PASS 01 / 30</div>
+              </div>
+            </div>
+            <div>
+              <p class="lede" style="margin-bottom: 2rem">
+                Every pixel is scored 30 times with different neurons switched off.
+                The average becomes the score; where the 30 answers disagree
+                (cyan), the model is telling you it doesn't know — before it's ever
+                wrong on the ground.
+              </p>
+              <div class="unc-stat-row">
+                <div class="unc-stat">
+                  <b>+0.620</b><span>Spearman ρ — M2020 (hardest domain)</span>
+                </div>
+                <div class="unc-stat">
+                  <b>+0.385</b><span>Spearman ρ — MSL (expert test)</span>
+                </div>
+                <div class="unc-stat">
+                  <b>0.00362</b><span>ECE — MSL calibration</span>
+                </div>
+              </div>
+              <p class="disclaimer" style="margin-top: 1.75rem">
+                Uncertainty is most informative on Perseverance — the rover furthest
+                from anything in training. The model is most honestly unsure exactly
+                where it is most likely to be wrong.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Results -->
+      <section class="section" id="results" data-reveal>
+        <p class="eyebrow kicker">Results</p>
+        <h2>Evaluated where it matters: the expert-labelled test set.</h2>
+        <p class="lede">
+          Every figure below comes from running the trained model against held-out
+          data.
+        </p>
+        <div class="stat-strip">
+          <div class="stat-cell"><b>0.00375</b><span>MAE · MSL expert test</span></div>
+          <div class="stat-cell"><b>100.2M</b><span>total parameters</span></div>
+          <div class="stat-cell"><b>26,558</b><span>training samples · 3 rovers</span></div>
+          <div class="stat-cell"><b>T = 30</b><span>MC Dropout passes</span></div>
+        </div>
+        <p
+          class="disclaimer"
+          style="margin-bottom: 1.4rem; text-transform: uppercase; letter-spacing: 0.06em"
+        >
+          Sample inferences — tiles await real rendered heatmaps; metric labels are
+          final.
+        </p>
+        <div class="gallery-grid">
+          <div class="gtile" style="background: linear-gradient(135deg, #3a2a22, #1c130f)">
+            <div class="ginfo">
+              <b>MSL · Expert Test</b>Mount Sharp · <span class="metric">MAE 0.00375</span>
+            </div>
+          </div>
+          <div class="gtile" style="background: linear-gradient(135deg, #4a2f1a, #20140a)">
+            <div class="ginfo">
+              <b>MSL · Big Rock</b>Hazard flagged · <span class="metric">1 detected</span>
+            </div>
+          </div>
+          <div class="gtile" style="background: linear-gradient(135deg, #5a3420, #241408)">
+            <div class="ginfo">
+              <b>M2020 · Jezero</b>Held-out · <span class="metric">MAE 0.05493</span>
+            </div>
+          </div>
+          <div class="gtile" style="background: linear-gradient(135deg, #38343a, #141216)">
+            <div class="ginfo">
+              <b>MER · Meridiani</b>Held-out · <span class="metric">MAE 0.05041</span>
+            </div>
+          </div>
+          <div class="gtile" style="background: linear-gradient(135deg, #2c3630, #101412)">
+            <div class="ginfo">
+              <b>Uncertainty Map</b>trav_std overlay · <span class="metric">ECE 0.00362</span>
+            </div>
+          </div>
+          <div class="gtile" style="background: linear-gradient(135deg, #332a3a, #141018)">
+            <div class="ginfo">
+              <b>Path Planning</b>3 ranked routes · <span class="metric">avoids big rock</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Footer / colophon -->
+    <footer id="colophon">
+      <div class="inner">
+        <div class="fmark">MTRA</div>
+        <p class="fmeta">
+          Mars Terrain Risk Analyzer — independent research built on NASA JPL's
+          AI4MARS v0.6 (Swan et al., 2021, CVPR Workshop). Continuous traversability
+          regression with Monte Carlo Dropout uncertainty, trained across all four
+          Mars rover missions.<br /><br />
+          Target venues: IEEE GRSS · Acta Astronautica.
+        </p>
+        <div class="flinks">
+          <a href="#">Paper (PDF)</a>
+          <a href="#">GitHub</a>
+          <a href="#">Contact</a>
+        </div>
+        <p class="fbottom">
+          Tanish Porwal — Independent Researcher · Traversability scores are
+          geologically-justified proxy labels, not ground-truth sensor
+          measurements.<br />
+          Mars &amp; star textures © Solar System Scope, CC BY 4.0 · Perseverance
+          model NASA/JPL-Caltech · Skycrane by jumpjack, CC BY.
+        </p>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

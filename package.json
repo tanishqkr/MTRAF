@@ -1,0 +1,22 @@
+{
+  "name": "mtraf",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "MTRA (Mars Terrain Risk Analyzer) — scrollytelling frontend",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^23.11.1",
+    "vite": "^5.4.0"
+  },
+  "dependencies": {
+    "gsap": "^3.12.5",
+    "lenis": "^1.1.0",
+    "three": "^0.170.0",
+    "three.quarks": "^0.15.0"
+  }
+}
