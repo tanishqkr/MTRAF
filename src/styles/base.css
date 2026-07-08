@@ -48,6 +48,24 @@ html.lenis body {
   background: var(--void);
 }
 
+/* Full-screen butterscotch dust-haze that masks the orbital→surface swap.
+   Sits above the canvas but below the story copy + chrome; opacity is driven by
+   the choreographer (0→1→0). A soft radial so the white-out reads as dust, not
+   a flat wipe. */
+#haze {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    120% 100% at 50% 44%,
+    #d5824f 0%,
+    #b85f35 45%,
+    #8f4322 100%
+  );
+}
+
 /* Scrolling content sits above the canvas. */
 #story {
   position: relative;

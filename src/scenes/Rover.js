@@ -11,7 +11,7 @@ export class Rover {
     this.group = new THREE.Group();
     this.group.visible = false;
     this.ready = false;
-    this._targetHeight = 0.9; // world units (Mars R = 10)
+    this._targetHeight = 2.3; // world units — sized to read big on-screen
     this._materials = [];
   }
 

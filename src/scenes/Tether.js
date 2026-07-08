@@ -4,6 +4,7 @@ const UP = new THREE.Vector3(0, 1, 0);
 const _dir = new THREE.Vector3();
 const _mid = new THREE.Vector3();
 const _top = new THREE.Vector3();
+const _bot = new THREE.Vector3();
 const _q = new THREE.Quaternion();
 
 // The skycrane bridle: three nylon cords + one comms umbilical, from the descent
@@ -31,11 +32,14 @@ export class Tether {
   }
 
   // Stretch the cords from the stage (topWorld) down to the rover deck
-  // (bottomWorld). Both are world-space points.
+  // (bottomWorld). Both are world-space points. Each cord fans out at BOTH
+  // ends (attaching to distinct points on the belly and the deck) so the
+  // bundle reads as parallel bridles, not a single V converging to a point.
   update(topWorld, bottomWorld) {
     for (const cord of this.cords) {
       _top.copy(topWorld).add(cord.offset);
-      _dir.subVectors(bottomWorld, _top);
+      _bot.copy(bottomWorld).addScaledVector(cord.offset, 0.55);
+      _dir.subVectors(_bot, _top);
       const len = _dir.length();
       if (len < 1e-4) {
         cord.mesh.visible = false;

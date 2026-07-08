@@ -1,9 +1,19 @@
 import * as THREE from 'three';
-import { ASSETS, MARS_RADIUS, COLORS } from '../config.js';
+import {
+  ASSETS,
+  MARS_RADIUS,
+  COLORS,
+  SKY,
+  SURFACE_FOG_DENSITY,
+  SURFACE_DTM,
+} from '../config.js';
 import { Mars } from './Mars.js';
 import { SkyCrane } from './SkyCrane.js';
 import { Rover } from './Rover.js';
 import { Dust } from './Dust.js';
+import { Surface, sampleDTMHeightfield } from './Surface.js';
+import { Tether } from './Tether.js';
+import { createGLTFLoader } from './gltf.js';
 import { isMobile } from '../util/device.js';
 
 // Owns the renderer, camera, lighting, starfield and the planet. Exposes a
@@ -64,6 +74,28 @@ export class MarsScene {
     this.rim = new THREE.DirectionalLight(COLORS.signal.clone(), 0.12);
     this.rim.position.set(-40, -10, -30);
     this.scene.add(this.rim);
+
+    // Orbital lights we toggle off once we're on the ground.
+    this._orbitalLights = [this.sun, this.ambient, this.rim];
+
+    // --- Surface-stage lighting (off until the ground swap) --------------
+    // Warm high sun for the butterscotch daytime look, plus a sky-tinted
+    // hemisphere fill so shadowed dune faces stay readable (not crushed black
+    // like the orbital night side).
+    this.surfaceSun = new THREE.DirectionalLight('#FFE9CE', 3.0);
+    this.surfaceSun.position.set(30, 60, 20);
+    this.surfaceSun.visible = false;
+    this.scene.add(this.surfaceSun);
+
+    this.surfaceFill = new THREE.HemisphereLight(
+      SKY.horizon.clone(), // sky term: warm tan from above
+      COLORS.rust.clone(), // ground term: rust bounce from below
+      0.9,
+    );
+    this.surfaceFill.visible = false;
+    this.scene.add(this.surfaceFill);
+
+    this._surfaceLights = [this.surfaceSun, this.surfaceFill];
   }
 
   async load() {
@@ -71,21 +103,58 @@ export class MarsScene {
     const load = (url) =>
       new Promise((res, rej) => loader.load(url, res, undefined, rej));
 
-    const [marsColor, milkyWay] = await Promise.all([
-      load(ASSETS.marsColor),
-      load(ASSETS.starsMilkyWay),
-    ]);
+    const [marsColor, milkyWay, groundColor, groundNormal, groundRough] =
+      await Promise.all([
+        load(ASSETS.marsColor),
+        load(ASSETS.starsMilkyWay),
+        load(ASSETS.marsGround.color),
+        load(ASSETS.marsGround.normal),
+        load(ASSETS.marsGround.roughness),
+      ]);
+
+    // Tile the ground PBR set across the terrain. ~14-unit tiles (terrain is
+    // SURFACE_SIZE units, rover ~1.7) so detail reads at ground level; high
+    // anisotropy keeps it sharp at the grazing "drone" angle.
+    const REPEAT = 44;
+    for (const t of [groundColor, groundNormal, groundRough]) {
+      t.wrapS = t.wrapT = THREE.RepeatWrapping;
+      t.repeat.set(REPEAT, REPEAT);
+      t.anisotropy = 8;
+    }
+    groundColor.colorSpace = THREE.SRGBColorSpace;
+
+    // Bake the real Jezero CTX DTM into a heightfield the surface will use for
+    // its terrain shape (rover/rocks/camera all read the same heightAt). If the
+    // DTM fails to load, heightData stays null and Surface uses procedural dunes.
+    let heightData = null;
+    try {
+      const gltf = await createGLTFLoader().loadAsync(ASSETS.jezeroDtm);
+      heightData = sampleDTMHeightfield(gltf.scene, THREE, SURFACE_DTM);
+    } catch (e) {
+      console.warn('Jezero DTM load failed; using procedural terrain.', e);
+    }
 
     // Starfield background: equirectangular Milky Way map on the scene
     // background (replaces the point-based starfield from the prototype).
     milkyWay.mapping = THREE.EquirectangularReflectionMapping;
     milkyWay.colorSpace = THREE.SRGBColorSpace;
+    this.milkyWay = milkyWay; // kept so setStage() can restore it after the swap
     this.scene.background = milkyWay;
     this.scene.backgroundIntensity = 0.35; // dim so stars read as deep space
 
     this.mars = new Mars(marsColor);
     this.mars.setSunDirection(this.sunDirection);
     this.scene.add(this.mars.group);
+
+    // Ground-level Martian landscape (Phase 8 surface stage). Hidden until the
+    // dust-haze swap; lives far below the globe so the two never interact.
+    this.surface = new Surface({
+      color: groundColor,
+      normal: groundNormal,
+      roughness: groundRough,
+      heightData,
+    });
+    this.scene.add(this.surface.group);
 
     // Skycrane + rover (both hidden until their beats).
     this.skycrane = new SkyCrane();
@@ -94,10 +163,42 @@ export class MarsScene {
     this.scene.add(this.skycrane.group);
     this.scene.add(this.rover.group);
 
+    // Bridle tether (3 cords + umbilical) — the rover hangs from it on the way
+    // down. Hidden until the surface descent.
+    this.tether = new Tether();
+    this.tether.setVisible(false);
+    this.scene.add(this.tether.group);
+
+    // Solid butterscotch sky colour + fog for the ground stage, created once and
+    // swapped in by setStage() (kept null on the orbital scene).
+    this._surfaceBackground = SKY.zenith.clone();
+    this._surfaceFog = new THREE.FogExp2(SKY.fog.clone(), SURFACE_FOG_DENSITY);
+
     // Touchdown dust (three.quarks).
     this.dust = new Dust(this.scene);
 
+    this._stageIsSurface = false;
+
     return this;
+  }
+
+  // Hard swap between the orbital globe and the ground-level surface, hidden by
+  // the choreographer's full-screen dust-haze. Idempotent + guarded so it only
+  // does the work on an actual transition, not every frame (CLAUDE.md: two
+  // stages, swapped behind the haze — never a continuous fly-down).
+  setStage(surface) {
+    if (surface === this._stageIsSurface) return;
+    this._stageIsSurface = surface;
+
+    // Planet + starfield off on the ground; landscape + fog + warm sun on.
+    if (this.mars) this.mars.group.visible = !surface;
+    if (this.surface) this.surface.setVisible(surface);
+
+    this.scene.background = surface ? this._surfaceBackground : this.milkyWay;
+    this.scene.fog = surface ? this._surfaceFog : null;
+
+    for (const l of this._orbitalLights) l.visible = !surface;
+    for (const l of this._surfaceLights) l.visible = surface;
   }
 
   start() {

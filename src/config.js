@@ -9,6 +9,18 @@ export const ASSETS = {
   starsMilkyWay: '/assets/textures/8k_stars_milky_way.jpg',
   perseverance: '/assets/models/perseverance.glb',
   skycrane: '/assets/models/skycrane.glb',
+  // Real Jezero Crater terrain (CTX camera DTM, martinjpratt, CC-BY — see
+  // CREDITS.md). Its elevation is baked into the surface heightfield so the
+  // ground has real Martian relief; the grayscale CTX image is NOT used (we keep
+  // the Rock029 PBR colour + butterscotch fog).
+  jezeroDtm: '/assets/models/jezero_crater_ctx_dtm.glb',
+  // Ground-stage PBR material (ambientCG Rock 029, CC0). Tiled across the
+  // surface terrain — see CREDITS.md.
+  marsGround: {
+    color: '/assets/textures/mars_ground/Rock029_2K-JPG_Color.jpg',
+    normal: '/assets/textures/mars_ground/Rock029_2K-JPG_NormalGL.jpg',
+    roughness: '/assets/textures/mars_ground/Rock029_2K-JPG_Roughness.jpg',
+  },
 };
 
 // Mars radius in world units. Everything else is expressed relative to this.
@@ -50,11 +62,43 @@ export const SKYCRANE_END_ALT = 0.4;
 export const SURFACE_ORIGIN = new THREE.Vector3(0, -2000, 0);
 export const SURFACE_SIZE = 600; // terrain plane extent (fog hides the edges)
 
-// Skycrane hover height above the landing point on the terrain, and how far the
-// rover is lowered beneath the stage on the bridle (scaled real 7.5 m tether).
-export const SURFACE_HOVER_START = 14; // stage height when the surface fades in
-export const SURFACE_HOVER_END = 4.2; // stage height at the moment of touchdown
-export const TETHER_LENGTH = 3.0; // rover hang distance below the stage
+// The landing point on the terrain, in Surface local coords (heightAt is sampled
+// here). Kept at the terrain centre so the rock cluster + camera framing agree.
+export const SURFACE_LANDING = { x: 0, z: 0 };
+
+// Rover hang height above the ground (world units) across the surface descent:
+// starts high on the bridle, ends just above the dirt, then touchdown eases it
+// the final bit down to 0 (wheels on the ground).
+export const SURFACE_ROVER_HANG_START = 8.5;
+export const SURFACE_ROVER_HANG_TOUCH = 0.15;
+
+// The bridle length: gap between the skycrane's origin and the rover's origin.
+// Must be big enough to clear BOTH models (skycrane ~2.4 tall, rover ~2.3 tall)
+// AND leave a visible span of cord between them — otherwise the stage sits right
+// on top of the rover and the tether vanishes.
+export const TETHER_LENGTH = 5.6;
+
+// Exponential fog for the ground stage — thick enough to hide the terrain edge
+// and sell the dusty butterscotch air, thin enough to see the landing.
+export const SURFACE_FOG_DENSITY = 0.0052;
+
+// How the real Jezero DTM is baked into the surface heightfield. A square-ish
+// region of the DTM (local model units) is cropped and mapped onto the terrain:
+//   cx, cz         — crop centre in DTM local X/Z (the landing site sits here)
+//   halfX, halfZ   — half-extents of the crop (DTM units); unequal = mild stretch
+//   relief         — total vertical relief in WORLD units (vertical exaggeration)
+//   gridN          — resolution of the baked heightmap grid
+//   yawDeg         — rotate the crop so the highest terrain faces the camera
+// Tunable by eye against screenshots (scripts/descent.mjs / reveal-shot.mjs).
+export const SURFACE_DTM = {
+  cx: 0.0,
+  cz: 0.5,
+  halfX: 1.6,
+  halfZ: 2.2,
+  relief: 45,
+  gridN: 128,
+  yawDeg: 0,
+};
 
 // Martian daytime sky: butterscotch/tan (pink-red only near sunrise/sunset).
 export const SKY = {
